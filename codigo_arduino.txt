@@ -1,0 +1,61 @@
+⚙️ Conexões
+Componente	Arduino UNO
+SDA (MOSI)	D11
+SCL (SCK)	D13
+CS	        D10
+DC	        D9
+RST	        D8
+VCC	        5V
+GND	        GND
+Termistor 	A0
+
+
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7789.h>
+#include <math.h>
+
+
+#define TFT_CS   10
+#define TFT_DC    9
+#define TFT_RST   8
+
+Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+
+
+const int pinoNTC = A0;
+
+
+const float R_SERIE = 10000.0; 
+const float BETA = 3950.0;
+const float T0 = 298.15; 
+const float R0 = 10000.0;
+
+void setup() {
+  Serial.begin(9600);
+
+
+  tft.init(240, 320);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setTextColor(ST77XX_GREEN);
+  tft.setTextSize(2);
+}
+
+void loop() {
+  int leitura = analogRead(pinoNTC);
+  float v = leitura * 5.0 / 1023.0;
+  float Rntc = (5.0 * R_SERIE / v) - R_SERIE;
+
+  float tempK = 1.0 / (1.0 / T0 + (1.0 / BETA) * log(Rntc / R0));
+  float tempC = tempK - 273.15;
+
+  
+  tft.fillRect(30, 100, 200, 40, ST77XX_BLACK);
+  tft.setCursor(30, 100);
+  tft.print("Temp: ");
+  tft.print(tempC, 1);
+  tft.println(" C");
+
+  delay(1000);
+}
